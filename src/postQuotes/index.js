@@ -18,7 +18,7 @@ exports.postQuotes = async ({ payload, headers }) => {
       payer: {
         partyIdInfo: {
           partyIdType: payload.payer.partyIdType,
-          partyIdentifier: payload.payer.partyIdType,
+          partyIdentifier: payload.payer.partyIdentifier,
           fspId: payload.payer.fspId
         },
         personalInfo: {
