@@ -91,6 +91,8 @@ exports.getTransactionRequestById = function (request, h) {
 
 exports.postTransactionRequest = function (request, h) {
   (async () => {
+    const INVALID_AMOUNT_VALUE = 1000 // amount to emulate simulator error
+
     const metadata = `${request.method} ${request.path} ${request.payload.transactionRequestId}`
     Logger.info(`IN transactionRequests POST:: received: ${metadata}.`)
     const url = transactionRequestsEndpoint + '/transactionRequests/' + request.payload.transactionRequestId
@@ -108,7 +110,7 @@ exports.postTransactionRequest = function (request, h) {
       }
       const transactionRequestsResponse = {
         transactionId: request.payload.transactionRequestId,
-        transactionRequestState: 'RECEIVED',
+        transactionRequestState: parseInt(request.payload.amount.amount) === INVALID_AMOUNT_VALUE ? null : 'RECEIVED', // emulate simulator error
         extensionList: request.payload.extensionList
       }
       const opts = {
