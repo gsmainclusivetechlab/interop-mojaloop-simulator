@@ -3,7 +3,7 @@
 const sendRequest = require('../lib/sendRequest')
 const Logger = require('@mojaloop/central-services-logger')
 const Enums = require('@mojaloop/central-services-shared').Enum
-const uuid = require('uuid/v4')
+const uuid = require('uuid')
 
 const quotesEndpoint = process.env.QUOTES_ENDPOINT || 'http://localhost:1080'
 
@@ -12,8 +12,8 @@ exports.postQuotes = async ({ payload, headers }) => {
 
   try {
     const body = {
-      quoteId: uuid(),
-      transactionId: uuid(),
+      quoteId: uuid.v4(),
+      transactionId: uuid.v4(),
       transactionRequestId: payload.transactionRequestId,
       payer: {
         partyIdInfo: {
@@ -58,7 +58,7 @@ exports.postQuotes = async ({ payload, headers }) => {
         'FSPIOP-Source': headers['fspiop-destination'],
         'FSPIOP-Destination': headers['fspiop-source'],
         'FSPIOP-Signature': headers['fspiop-signature'],
-        Authorization: 'Bearer {{TESTFSP1_BEARER_TOKEN}}',
+        Authorization: `Bearer {{${headers['fspiop-destination'].toUpperCase()}_BEARER_TOKEN}}`,
         traceparent: headers.traceparent
       },
       transformRequest: [

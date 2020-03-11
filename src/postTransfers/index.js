@@ -3,7 +3,7 @@
 const sendRequest = require('../lib/sendRequest')
 const Logger = require('@mojaloop/central-services-logger')
 const Enums = require('@mojaloop/central-services-shared').Enum
-const uuid = require('uuid/v4')
+const uuid = require('uuid')
 
 const transfersEndpoint =
   process.env.TRANSFERS_ENDPOINT || 'http://localhost:1080'
@@ -14,7 +14,7 @@ exports.postTransfers = async ({ payload, headers }) => {
 
   try {
     const body = {
-      transferId: uuid(),
+      transferId: uuid.v4(),
       payerFsp: headers['fspiop-destination'],
       payeeFsp: headers['fspiop-source'],
       amount: payload.transferAmount,

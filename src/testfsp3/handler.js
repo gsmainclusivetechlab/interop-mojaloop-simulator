@@ -34,6 +34,9 @@ const Enums = require('@mojaloop/central-services-shared').Enum
 const Metrics = require('../lib/metrics')
 const base64url = require('base64url')
 
+const { putTransactionRequest, requestsCache } = require('../transactionRequests/helpers')
+const { postTransfers } = require('../postTransfers')
+
 const partiesEndpoint = process.env.PARTIES_ENDPOINT || 'http://localhost:1080'
 const quotesEndpoint = process.env.QUOTES_ENDPOINT || 'http://localhost:1080'
 const transfersEndpoint = process.env.TRANSFERS_ENDPOINT || 'http://localhost:1080'
@@ -305,27 +308,44 @@ exports.postQuotes = function (req, h) {
 }
 
 exports.putQuotesById = function (request, h) {
-  const histTimerEnd = Metrics.getHistogram(
-    'sim_request',
-    'Histogram for Simulator http operations',
-    ['success', 'fsp', 'operation', 'source', 'destination']
-  ).startTimer()
+  (async () => {
+    const histTimerEnd = Metrics.getHistogram(
+      'sim_request',
+      'Histogram for Simulator http operations',
+      ['success', 'fsp', 'operation', 'source', 'destination']
+    ).startTimer()
 
-  // Logger.perf(`[cid=${request.payload.transferId}, fsp=${request.headers['fspiop-source']}, source=${request.headers['fspiop-source']}, dest=${request.headers['fspiop-destination']}] ~ Simulator::api::payer::putQuotesById - START`)
+    // Logger.perf(`[cid=${request.payload.transferId}, fsp=${request.headers['fspiop-source']}, source=${request.headers['fspiop-source']}, dest=${request.headers['fspiop-destination']}] ~ Simulator::api::payer::putQuotesById - START`)
 
-  Logger.info(`IN testfsp3:: PUT /testfsp3/quotes/${request.params.id}, PAYLOAD: [${JSON.stringify(request.payload)}]`)
+    Logger.info(`IN testfsp3:: PUT /testfsp3/quotes/${request.params.id}, PAYLOAD: [${JSON.stringify(request.payload)}]`)
 
-  // Saving Incoming request
-  const incomingRequest = {
-    headers: request.headers,
-    data: request.payload
-  }
-  callbackCache.set(request.params.id, incomingRequest)
+    // Saving Incoming request
+    const incomingRequest = {
+      headers: request.headers,
+      data: request.payload
+    }
+    callbackCache.set(request.params.id, incomingRequest)
 
-  correlationCache.set(request.params.id, request.payload)
+    correlationCache.set(request.params.id, request.payload)
 
-  // Logger.perf(`[cid=${request.payload.transferId}, fsp=${request.headers['fspiop-source']}, source=${request.headers['fspiop-source']}, dest=${request.headers['fspiop-destination']}] ~ Simulator::api::payer::putQuotesById - END`)
-  histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
+    // Logger.perf(`[cid=${request.payload.transferId}, fsp=${request.headers['fspiop-source']}, source=${request.headers['fspiop-source']}, dest=${request.headers['fspiop-destination']}] ~ Simulator::api::payer::putQuotesById - END`)
+    histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
+
+    // amount to emulate test case "Rejected transaction"
+    const INVALID_AMOUNT_VALUE = 10.1
+    const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
+
+    if (isTransferAmountInvalid) {
+      const normalizedRequest = request
+      normalizedRequest.payload.transactionRequestId = requestsCache.get('transactionRequestId')
+
+      putTransactionRequest(normalizedRequest, null, 'REJECTED')
+
+      return
+    }
+
+    await postTransfers(request)
+  })()
   return h.response().code(Enums.Http.ReturnCodes.OK.CODE)
 }
 
