@@ -1,5 +1,6 @@
 /*****
  License
+
  --------------
  Copyright © 2017 Bill & Melinda Gates Foundation
  The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
@@ -37,6 +38,7 @@ const callbackCache = new NodeCache()
 const correlationCache = new NodeCache()
 const transactionRequestsEndpoint = process.env.TRANSACTION_REQUESTS_ENDPOINT || 'http://moja-transaction-requests-service'
 
+const Helpers = require('./helpers')
 const { postQuotes } = require('../postQuotes')
 
 exports.getTransactionRequestById = function (request, h) {
@@ -91,57 +93,10 @@ exports.getTransactionRequestById = function (request, h) {
 }
 
 exports.postTransactionRequest = function (request, h) {
-  (async () => {
-    const INVALID_AMOUNT_VALUE = 1000 // amount to emulate simulator error
+  const metadata = `${request.method} ${request.path} ${request.payload.transactionRequestId}`
+  Logger.isInfoEnabled && Logger.info(`IN transactionRequests POST:: received: ${metadata}.`)
 
-    const metadata = `${request.method} ${request.path} ${request.payload.transactionRequestId}`
-    Logger.isInfoEnabled && Logger.info(`IN transactionRequests POST:: received: ${metadata}.`)
-    const url = transactionRequestsEndpoint + '/transactionRequests/' + request.payload.transactionRequestId
-    try {
-      if (requestsCache.get(request.payload.transactionRequestId)) {
-        await sendErrorCallback(
-          ErrorHandler.CreateFSPIOPError(ErrorHandler.Enums.FSPIOPErrorCodes.CLIENT_ERROR, `ID:${request.payload.transactionRequestId} already exists`, null, request.headers['fspiop-source']),
-          request.params.ID,
-          request.headers,
-          request.span
-        )
-        throw new Error(`ID:${request.payload.transactionRequestId} already exists`)
-      } else {
-        requestsCache.set(request.payload.transactionRequestId, { headers: request.headers, data: request.payload })
-      }
-      const transactionRequestsResponse = {
-        transactionId: request.payload.transactionRequestId,
-        transactionRequestState: parseInt(request.payload.amount.amount) === INVALID_AMOUNT_VALUE ? null : 'RECEIVED', // emulate simulator error
-        extensionList: request.payload.extensionList
-      }
-      const opts = {
-        method: 'PUT',
-        headers: {
-          ID: request.payload.transactionRequestId,
-          'Content-Type': 'application/vnd.interoperability.transactionRequests+json;version=1.0',
-          'FSPIOP-Source': request.headers['fspiop-destination'],
-          'FSPIOP-Destination': request.headers['fspiop-source'],
-          Date: new Date().toUTCString(),
-          'FSPIOP-HTTP-Method': 'PUT',
-          'FSPIOP-URI': `/transactionRequests/${request.payload.transactionRequestId}`
-        },
-        transformRequest: [(data, headers) => {
-          delete headers.common.Accept
-          return data
-        }],
-        data: JSON.stringify(transactionRequestsResponse)
-      }
-      const res = await sendRequest(url, opts, request.span)
-      Logger.isInfoEnabled && Logger.info(`response: ${res.status}`)
-      if (res.status !== Enums.Http.ReturnCodes.OK.CODE) {
-        throw new Error(`Failed to send. Result: ${JSON.stringify(res)}`)
-      }
-
-      await postQuotes(request)
-    } catch (err) {
-      Logger.isErrorEnabled && Logger.error(err)
-    }
-  })()
+  Helpers.putTransactionRequest(request, postQuotes)
 
   return h.response().code(Enums.Http.ReturnCodes.ACCEPTED.CODE)
 }
@@ -183,6 +138,8 @@ exports.getCallbackById = function (request, h) {
 
   return h.response(responseData).code(Enums.Http.ReturnCodes.OK.CODE)
 }
+
+exports.requestsCache = requestsCache
 
 const sendErrorCallback = async (fspiopError, transactionRequestId, headers, span) => {
   try {
