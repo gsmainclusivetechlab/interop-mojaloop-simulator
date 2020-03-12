@@ -34,6 +34,7 @@ const Enums = require('@mojaloop/central-services-shared').Enum
 const Metrics = require('../lib/metrics')
 const base64url = require('base64url')
 
+const { putTransactionRequest, requestsCache } = require('../transactionRequests/helpers')
 const { postTransfers } = require('../postTransfers')
 
 const partiesEndpoint = process.env.PARTIES_ENDPOINT || 'http://localhost:1080'
@@ -329,6 +330,19 @@ exports.putQuotesById = function (request, h) {
 
     // Logger.perf(`[cid=${request.payload.transferId}, fsp=${request.headers['fspiop-source']}, source=${request.headers['fspiop-source']}, dest=${request.headers['fspiop-destination']}] ~ Simulator::api::payer::putQuotesById - END`)
     histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
+
+    // amount to emulate test case "Rejected transaction"
+    const INVALID_AMOUNT_VALUE = 10.1
+    const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
+
+    if (isTransferAmountInvalid) {
+      const normalizedRequest = request
+      normalizedRequest.payload.transactionRequestId = requestsCache.get('transactionRequestId')
+
+      putTransactionRequest(normalizedRequest, null, 'REJECTED')
+
+      return
+    }
 
     await postTransfers(request)
   })()
