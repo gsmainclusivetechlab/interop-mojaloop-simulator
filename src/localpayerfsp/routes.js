@@ -80,6 +80,16 @@ module.exports = [
     }
   },
   {
+    method: 'PUT',
+    path: '/localpayerfsp/quotes/{id}/error',
+    handler: Handler.putQuotesByIdAndError,
+    options: {
+      id: `simulator_${__dirname.split('/').pop()}_putQuotesByIdAndError`,
+      tags: tags,
+      description: 'Metadata'
+    }
+  },
+  {
     method: 'POST',
     path: '/localpayerfsp/transfers',
     handler: Handler.postTransfers,
