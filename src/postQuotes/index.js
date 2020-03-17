@@ -39,10 +39,13 @@ exports.postQuotes = async ({ payload, headers }) => {
         personalInfo: payload.payee.personalInfo
       },
       amountType: 'SEND',
-      amount: payload.amount,
+      amount: {
+        amount: payload.amount.amount,
+        currency: payload.amount.currency
+      },
       transactionType: {
-        scenario: 'TRANSFER',
-        initiator: 'PAYER',
+        scenario: 'PAYMENT',
+        initiator: 'PAYEE',
         initiatorType: payload.transactionType.initiatorType
       },
       note: payload.note

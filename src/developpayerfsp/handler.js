@@ -328,9 +328,6 @@ exports.putQuotesById = function (request, h) {
 
     correlationCache.set(request.params.id, request.payload)
 
-    // Logger.perf(`[cid=${request.payload.transferId}, fsp=${request.headers['fspiop-source']}, source=${request.headers['fspiop-source']}, dest=${request.headers['fspiop-destination']}] ~ Simulator::api::payer::putQuotesById - END`)
-    histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
-
     // amount to emulate test case "Rejected transaction"
     const INVALID_AMOUNT_VALUE = 10.1
     const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
@@ -345,6 +342,9 @@ exports.putQuotesById = function (request, h) {
     }
 
     await postTransfers(request)
+
+    // Logger.perf(`[cid=${request.payload.transferId}, fsp=${request.headers['fspiop-source']}, source=${request.headers['fspiop-source']}, dest=${request.headers['fspiop-destination']}] ~ Simulator::api::payer::putQuotesById - END`)
+    histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
   })()
   return h.response().code(Enums.Http.ReturnCodes.OK.CODE)
 }
