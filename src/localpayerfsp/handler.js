@@ -339,7 +339,7 @@ exports.putQuotesById = function (request, h) {
       const normalizedRequest = request
       normalizedRequest.payload.transactionRequestId = requestsCache.get('transactionRequestId')
 
-      putTransactionRequest(normalizedRequest, null, 'REJECTED')
+      await putTransactionRequest(normalizedRequest, null, 'REJECTED')
 
       return
     }
