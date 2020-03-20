@@ -34,7 +34,7 @@ const Enums = require('@mojaloop/central-services-shared').Enum
 const Metrics = require('../lib/metrics')
 const base64url = require('base64url')
 
-const { putTransactionRequest, requestsCache } = require('../transactionRequests/helpers')
+const { putTransactionRequest } = require('../transactionRequests/helpers')
 const { postTransfers } = require('../postTransfers')
 
 const partiesEndpoint = process.env.PARTIES_ENDPOINT || 'http://localhost:1080'
@@ -336,10 +336,7 @@ exports.putQuotesById = function (request, h) {
     const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
 
     if (isTransferAmountInvalid) {
-      const normalizedRequest = request
-      normalizedRequest.payload.transactionRequestId = requestsCache.get('transactionRequestId')
-
-      await putTransactionRequest(normalizedRequest, null, 'REJECTED')
+      await putTransactionRequest(request, null, 'REJECTED')
 
       return
     }

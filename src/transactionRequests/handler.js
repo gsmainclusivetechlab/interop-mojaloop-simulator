@@ -96,6 +96,8 @@ exports.postTransactionRequest = function (request, h) {
   const metadata = `${request.method} ${request.path} ${request.payload.transactionRequestId}`
   Logger.isInfoEnabled && Logger.info(`IN transactionRequests POST:: received: ${metadata}.`)
 
+  requestsCache.set('transactionRequestId', request.payload.transactionRequestId)
+
   Helpers.putTransactionRequest(request, postQuotes)
 
   return h.response().code(Enums.Http.ReturnCodes.ACCEPTED.CODE)
