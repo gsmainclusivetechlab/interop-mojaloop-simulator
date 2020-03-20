@@ -34,7 +34,7 @@ const Enums = require('@mojaloop/central-services-shared').Enum
 const Metrics = require('../lib/metrics')
 const base64url = require('base64url')
 
-const { putTransactionRequest, requestsCache } = require('../transactionRequests/helpers')
+const { putTransactionRequest } = require('../transactionRequests/helpers')
 const { postTransfers } = require('../postTransfers')
 
 const partiesEndpoint = process.env.PARTIES_ENDPOINT || 'http://localhost:1080'
@@ -357,7 +357,7 @@ exports.putQuotesByIdAndError = function (request, h) {
   }
   callbackCache.set(request.params.id, incomingRequest)
 
-  return h.response().code(Enums.Http.ReturnCodes.OK.CODE)
+  return h.response().code(Enums.Http.ReturnCodes.ACCEPTED.CODE)
 }
 
 // Section about Transfers
