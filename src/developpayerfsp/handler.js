@@ -35,7 +35,7 @@ const Metrics = require('../lib/metrics')
 const base64url = require('base64url')
 
 const { putTransactionRequest } = require('../transactionRequests/helpers')
-const { postTransfers } = require('../postTransfers')
+// const { postTransfers } = require('../postTransfers')
 
 const partiesEndpoint = process.env.PARTIES_ENDPOINT || 'http://localhost:1080'
 const quotesEndpoint = process.env.QUOTES_ENDPOINT || 'http://localhost:1080'
@@ -332,16 +332,16 @@ exports.putQuotesById = function (request, h) {
     histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
 
     // amount to emulate test case "Rejected transaction"
-    const INVALID_AMOUNT_VALUE = 10.1
-    const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
+    // const INVALID_AMOUNT_VALUE = 10.1
+    // const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
 
-    if (isTransferAmountInvalid) {
+    // if (isTransferAmountInvalid) {
       await putTransactionRequest(request, null, 'REJECTED')
 
-      return
-    }
+      // return
+    // }
 
-    await postTransfers(request)
+    // await postTransfers(request)
   })()
   return h.response().code(Enums.Http.ReturnCodes.OK.CODE)
 }
