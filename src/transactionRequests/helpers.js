@@ -9,7 +9,7 @@ const { requestsCache } = require('./handler')
 const transactionRequestsEndpoint = process.env.TRANSACTION_REQUESTS_ENDPOINT || 'http://moja-transaction-requests-service'
 
 exports.putTransactionRequest = async (request, cb, requestState) => {
-  const trxId = request.payload.transactionRequestId || requestsCache.get('transactionRequestId')
+  const trxId = requestsCache.get('transactionRequestId')
   const url = transactionRequestsEndpoint + '/transactionRequests/' + trxId
 
   try {

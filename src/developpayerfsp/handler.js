@@ -357,7 +357,7 @@ exports.putQuotesByIdAndError = function (request, h) {
   }
   callbackCache.set(request.params.id, incomingRequest)
 
-  return h.response().code(Enums.Http.ReturnCodes.ACCEPTED.CODE)
+  return h.response().code(Enums.Http.ReturnCodes.OK.CODE)
 }
 
 // Section about Transfers
