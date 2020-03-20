@@ -9,11 +9,10 @@ const { requestsCache } = require('./handler')
 const transactionRequestsEndpoint = process.env.TRANSACTION_REQUESTS_ENDPOINT || 'http://moja-transaction-requests-service'
 
 exports.putTransactionRequest = async (request, cb, requestState) => {
-  const url = transactionRequestsEndpoint + '/transactionRequests/' + request.payload.transactionRequestId
+  const trxId = request.payload.transactionRequestId || requestsCache.get('transactionRequestId')
+  const url = transactionRequestsEndpoint + '/transactionRequests/' + trxId
 
   try {
-    requestsCache.set('transactionRequestId', request.payload.transactionRequestId)
-
     // amount to emulate test case "Transaction Request Rejected by Payer"
     const INVALID_AMOUNT_VALUE = 15.15
     const isAmountInvalid = parseFloat(
@@ -23,7 +22,7 @@ exports.putTransactionRequest = async (request, cb, requestState) => {
     ) === INVALID_AMOUNT_VALUE
 
     const transactionRequestsResponse = {
-      transactionId: request.payload.transactionRequestId,
+      transactionId: trxId,
       transactionRequestState: requestState || (isAmountInvalid ? 'REJECTED' : 'RECEIVED'),
       extensionList: request.payload.extensionList
     }
@@ -36,7 +35,7 @@ exports.putTransactionRequest = async (request, cb, requestState) => {
         'FSPIOP-Destination': request.headers['fspiop-source'],
         Date: new Date().toUTCString(),
         'FSPIOP-HTTP-Method': 'PUT',
-        'FSPIOP-URI': `/transactionRequests/${request.payload.transactionRequestId}`
+        'FSPIOP-URI': `/transactionRequests/${trxId}`
       },
       transformRequest: [(data, headers) => {
         delete headers.common.Accept
