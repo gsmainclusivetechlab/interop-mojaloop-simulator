@@ -58,3 +58,5 @@ exports.putTransactionRequest = async (request, cb, requestState) => {
     Logger.error(err)
   }
 }
+
+exports.requestsCache = requestsCache
