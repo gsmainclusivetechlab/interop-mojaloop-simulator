@@ -58,6 +58,8 @@ const extractUrls = (request) => {
   return urls
 }
 
+const TRX_ID_FALLBACK = '620a103f-bc9d-4369-87e9-8c604107b055'
+
 exports.metadata = function (request, h) {
   return h.response({
     directory: 'localhost',
@@ -337,7 +339,7 @@ exports.putQuotesById = function (request, h) {
 
     if (isTransferAmountInvalid) {
       const normalizedRequest = request
-      normalizedRequest.payload.transactionRequestId = requestsCache.get('transactionRequestId')
+      normalizedRequest.payload.transactionRequestId = requestsCache.get('transactionRequestId') || TRX_ID_FALLBACK
 
       await putTransactionRequest(normalizedRequest, null, 'REJECTED')
 
