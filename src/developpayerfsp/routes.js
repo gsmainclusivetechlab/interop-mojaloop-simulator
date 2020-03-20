@@ -26,7 +26,7 @@ const tags = ['api', 'metadata', Enum.Tags.RouteTags.SAMPLED]
 module.exports = [
   {
     method: 'GET',
-    path: '/developpayerfsp/',
+    path: '/',
     handler: Handler.metadata,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_metadata`,
@@ -36,7 +36,7 @@ module.exports = [
   },
   {
     method: 'POST',
-    path: '/developpayerfsp/parties/{type}/{id}',
+    path: '/parties/{type}/{id}',
     handler: Handler.postPartiesByTypeAndId,
     config: {
       id: `simulator_${__dirname.split('/').pop()}_postPartiesByTypeAndId`,
@@ -51,7 +51,7 @@ module.exports = [
   },
   {
     method: 'GET',
-    path: '/developpayerfsp/parties/{type}/{id}',
+    path: '/parties/{type}/{id}',
     handler: Handler.getPartiesByTypeAndId,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_getPartiesByTypeAndId`,
@@ -61,7 +61,7 @@ module.exports = [
   },
   {
     method: 'POST',
-    path: '/developpayerfsp/quotes',
+    path: '/quotes',
     handler: Handler.postQuotes,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_postQuotes`,
@@ -71,7 +71,7 @@ module.exports = [
   },
   {
     method: 'PUT',
-    path: '/developpayerfsp/quotes/{id}',
+    path: '/quotes/{id}',
     handler: Handler.putQuotesById,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_putQuotesById`,
@@ -81,7 +81,7 @@ module.exports = [
   },
   {
     method: 'PUT',
-    path: '/developpayerfsp/quotes/{id}/error',
+    path: '/quotes/{id}/error',
     handler: Handler.putQuotesByIdAndError,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_putQuotesByIdAndError`,
@@ -91,7 +91,7 @@ module.exports = [
   },
   {
     method: 'POST',
-    path: '/developpayerfsp/transfers',
+    path: '/transfers',
     handler: Handler.postTransfers,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_postTransfers`,
@@ -101,7 +101,7 @@ module.exports = [
   },
   {
     method: 'PUT',
-    path: '/developpayerfsp/transfers/{id}',
+    path: '/transfers/{id}',
     handler: Handler.putTransfersById,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_putTransfersById`,
@@ -111,7 +111,7 @@ module.exports = [
   },
   {
     method: 'PUT',
-    path: '/developpayerfsp/transfers/{id}/error',
+    path: '/transfers/{id}/error',
     handler: Handler.putTransfersByIdError,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_putTransfersByIdError`,
@@ -121,7 +121,7 @@ module.exports = [
   },
   {
     method: 'GET',
-    path: '/developpayerfsp/correlationid/{id}',
+    path: '/correlationid/{id}',
     handler: Handler.getcorrelationId,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_getcorrelationId`,
