@@ -53,6 +53,11 @@ module.exports = async (url, opts, span, isTrx = true) => {
         tracestate: traceCache.get('tracestate')
       })
     })
+
+    span.setTags({
+      traceparent: traceCache.get('traceparent'),
+      tracestate: traceCache.get('tracestate')
+    })
   }
 
   const res = await request(url, optionsWithCleanHeaders)
