@@ -95,7 +95,6 @@ exports.postTransactionRequest = function (request, h) {
   Logger.info(`IN transactionRequests POST:: received: ${metadata}.`)
 
   requestsCache.set('transactionRequestId', request.payload.transactionRequestId)
-  requestsCache.set('trxSpan', request.span)
 
   Helpers.putTransactionRequest(request, postQuotes)
 
