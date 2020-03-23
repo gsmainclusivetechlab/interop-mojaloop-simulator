@@ -107,7 +107,7 @@ class HTTPRequestHandler {
   */
   async sendRequest (url, opts, span) {
     Logger.isInfoEnabled && Logger.info(`Executing request: [${url}], HEADERS: [${JSON.stringify(opts.headers)}], BODY: [${JSON.stringify(opts.body)}]`)
-    let optionsWithCleanHeaders = Object.assign({}, opts, { headers: pickBy(opts.headers, identity) })
+    const optionsWithCleanHeaders = Object.assign({}, opts, { headers: pickBy(opts.headers, identity) })
     const res = await this._requestInstance.request(url, optionsWithCleanHeaders)
     Logger.isInfoEnabled && Logger.info((new Date().toISOString()), 'response: ', res.status)
     return res
