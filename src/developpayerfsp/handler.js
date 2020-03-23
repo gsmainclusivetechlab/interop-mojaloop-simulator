@@ -337,11 +337,11 @@ exports.putQuotesById = function (request, h) {
 
     if (isTransferAmountInvalid) {
       const trxRequest = request
-      const traceparentParts = trxRequest.headers.traceparent[0].split('-')
+      const traceparentParts = trxRequest.headers.traceparent.split('-')
       const traceparentHeaders = `${traceparentParts[0]}-${traceparentParts[1]}`
-      trxRequest.headers.traceparent = [traceparentHeaders]
+      trxRequest.headers.traceparent = traceparentHeaders
 
-      await putTransactionRequest(request, null, 'REJECTED')
+      await putTransactionRequest(trxRequest, null, 'REJECTED')
 
       return
     }
