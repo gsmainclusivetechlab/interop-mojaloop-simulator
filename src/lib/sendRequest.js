@@ -106,11 +106,8 @@ class HTTPRequestHandler {
    *@return {object} The response for the request being sent or error object with response included
   */
   async sendRequest (url, opts, span) {
-    Logger.isInfoEnabled && Logger.info(`Executing PUT: [${url}], HEADERS: [${JSON.stringify(opts.headers)}], BODY: [${JSON.stringify(opts.body)}]`)
+    Logger.isInfoEnabled && Logger.info(`Executing request: [${url}], HEADERS: [${JSON.stringify(opts.headers)}], BODY: [${JSON.stringify(opts.body)}]`)
     let optionsWithCleanHeaders = Object.assign({}, opts, { headers: pickBy(opts.headers, identity) })
-    if (span) {
-      optionsWithCleanHeaders = span.injectContextToHttpRequest(optionsWithCleanHeaders)
-    }
     const res = await this._requestInstance.request(url, optionsWithCleanHeaders)
     Logger.isInfoEnabled && Logger.info((new Date().toISOString()), 'response: ', res.status)
     return res
