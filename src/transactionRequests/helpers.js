@@ -8,7 +8,7 @@ const { requestsCache } = require('./handler')
 
 const transactionRequestsEndpoint = process.env.TRANSACTION_REQUESTS_ENDPOINT || 'http://moja-transaction-requests-service'
 
-exports.putTransactionRequest = async (request, cb, requestState) => {
+exports.putTransactionRequest = async (request, cb, requestState, isTrx) => {
   const trxId = requestsCache.get('transactionRequestId')
   const url = transactionRequestsEndpoint + '/transactionRequests/' + trxId
 
@@ -43,7 +43,7 @@ exports.putTransactionRequest = async (request, cb, requestState) => {
       }],
       data: JSON.stringify(transactionRequestsResponse)
     }
-    const res = await sendRequest(url, opts, request.span)
+    const res = await sendRequest(url, opts, request.span, isTrx)
     Logger.info(`response: ${res.status}`)
     if (res.status !== Enums.Http.ReturnCodes.OK.CODE) {
       throw new Error(`Failed to send. Result: ${JSON.stringify(res)}`)

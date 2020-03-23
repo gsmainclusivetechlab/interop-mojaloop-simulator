@@ -336,12 +336,7 @@ exports.putQuotesById = function (request, h) {
     const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
 
     if (isTransferAmountInvalid) {
-      const trxRequest = request
-      const traceparentParts = trxRequest.headers.traceparent.split('-')
-      const traceparentHeaders = `${traceparentParts[0]}-${traceparentParts[1]}`
-      trxRequest.headers.traceparent = traceparentHeaders
-
-      await putTransactionRequest(trxRequest, null, 'REJECTED')
+      await putTransactionRequest(request, null, 'REJECTED', false)
 
       return
     }
