@@ -28,37 +28,10 @@
 const Logger = require('@mojaloop/central-services-logger')
 const request = require('axios')
 const { pickBy, identity } = require('lodash')
-const NodeCache = require('node-cache')
-const traceCache = new NodeCache()
 
-module.exports = async (url, opts, span, isTrx = true) => {
+module.exports = async (url, opts) => {
   Logger.info(`Executing PUT: [${url}], HEADERS: [${JSON.stringify(opts.headers)}], BODY: [${JSON.stringify(opts.body)}]`)
-  let optionsWithCleanHeaders = Object.assign({}, opts, { headers: pickBy(opts.headers, identity) })
-  if (span) {
-    optionsWithCleanHeaders = span.injectContextToHttpRequest(optionsWithCleanHeaders)
-  }
-
-  if (isTrx) {
-    if (!traceCache.get('traceparent')) {
-      traceCache.set('traceparent', optionsWithCleanHeaders.headers.traceparent)
-    }
-
-    if (!traceCache.get('tracestate')) {
-      traceCache.set('tracestate', optionsWithCleanHeaders.headers.tracestate)
-    }
-  } else {
-    optionsWithCleanHeaders = Object.assign({}, optionsWithCleanHeaders, {
-      headers: Object.assign({}, optionsWithCleanHeaders.headers, {
-        traceparent: traceCache.get('traceparent'),
-        tracestate: traceCache.get('tracestate')
-      })
-    })
-
-    span.setTags({
-      traceparent: traceCache.get('traceparent'),
-      tracestate: traceCache.get('tracestate')
-    })
-  }
+  const optionsWithCleanHeaders = Object.assign({}, opts, { headers: pickBy(opts.headers, identity) })
 
   const res = await request(url, optionsWithCleanHeaders)
   Logger.info((new Date().toISOString()), 'response: ', res.status)

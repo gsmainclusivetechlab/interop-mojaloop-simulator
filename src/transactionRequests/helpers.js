@@ -35,7 +35,9 @@ exports.putTransactionRequest = async (request, cb, requestState, isTrx) => {
         'FSPIOP-Destination': request.headers['fspiop-source'],
         Date: new Date().toUTCString(),
         'FSPIOP-HTTP-Method': 'PUT',
-        'FSPIOP-URI': `/transactionRequests/${trxId}`
+        'FSPIOP-URI': `/transactionRequests/${trxId}`,
+        traceparent: request.headers.traceparent ? request.headers.traceparent : undefined,
+        tracestate: request.headers.tracestate ? request.headers.tracestate : undefined
       },
       transformRequest: [(data, headers) => {
         delete headers.common.Accept

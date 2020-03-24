@@ -121,9 +121,9 @@ exports.getPartiesByTypeAndId = function (req, h) {
           'Content-Type': 'application/vnd.interoperability.parties+json;version=1.0',
           'FSPIOP-Source': 'developpayerfsp',
           'FSPIOP-Destination': req.headers['fspiop-source'],
-          Date: req.headers.date
-          // traceparent: req.headers.traceparent ? req.headers.traceparent : undefined,
-          // tracestate: req.headers.tracestate ? req.headers.tracestate : undefined
+          Date: req.headers.date,
+          traceparent: req.headers.traceparent ? req.headers.traceparent : undefined,
+          tracestate: req.headers.tracestate ? req.headers.tracestate : undefined
         },
         transformRequest: [(data, headers) => {
           delete headers.common.Accept
@@ -268,9 +268,9 @@ exports.postQuotes = function (req, h) {
           Date: new Date().toUTCString(),
           'FSPIOP-Signature': `${JSON.stringify(fspiopSignature)}`,
           'FSPIOP-HTTP-Method': 'PUT',
-          'FSPIOP-URI': `/quotes/${quotesRequest.quoteId}`
-          // traceparent: req.headers.traceparent ? req.headers.traceparent : undefined,
-          // tracestate: req.headers.tracestate ? req.headers.tracestate : undefined
+          'FSPIOP-URI': `/quotes/${quotesRequest.quoteId}`,
+          traceparent: req.headers.traceparent ? req.headers.traceparent : undefined,
+          tracestate: req.headers.tracestate ? req.headers.tracestate : undefined
         },
         transformRequest: [(data, headers) => {
           delete headers.common.Accept
@@ -411,9 +411,9 @@ exports.postTransfers = async function (req, h) {
           Date: new Date().toUTCString(),
           'FSPIOP-Signature': JSON.stringify(fspiopSignature),
           'FSPIOP-HTTP-Method': 'PUT',
-          'FSPIOP-URI': fspiopUriHeader
-          // traceparent: req.headers.traceparent ? req.headers.traceparent : undefined,
-          // tracestate: req.headers.tracestate ? req.headers.tracestate : undefined
+          'FSPIOP-URI': fspiopUriHeader,
+          traceparent: req.headers.traceparent ? req.headers.traceparent : undefined,
+          tracestate: req.headers.tracestate ? req.headers.tracestate : undefined
         },
         data: JSON.stringify(transfersResponse)
       }
