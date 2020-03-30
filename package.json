@@ -42,7 +42,7 @@
     "@mojaloop/central-services-error-handling": "9.1.0",
     "@mojaloop/central-services-logger": "9.1.0",
     "@mojaloop/central-services-metrics": "9.1.0",
-    "@mojaloop/central-services-shared": "^9.4.0",
+    "@mojaloop/central-services-shared": "^9.4.1",
     "axios": "0.19.2",
     "base64url": "3.0.1",
     "blipp": "4.0.1",
@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "npm-audit-resolver": "2.2.0",
-    "npm-check-updates": "^4.0.4",
+    "npm-check-updates": "^4.1.0",
     "pre-commit": "1.2.2",
     "standard": "^14.3.3"
   }
