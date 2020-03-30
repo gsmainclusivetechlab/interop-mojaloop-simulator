@@ -46,7 +46,7 @@ exports.putTransactionRequest = async (request, cb, requestState, noTraceState) 
       }],
       data: JSON.stringify(transactionRequestsResponse)
     }
-    const res = await sendRequest(url, opts, request.span)
+    const res = await sendRequest(url, opts)
     Logger.isInfoEnabled && Logger.info(`response: ${res.status}`)
     if (res.status !== Enums.Http.ReturnCodes.OK.CODE) {
       throw new Error(`Failed to send. Result: ${JSON.stringify(res)}`)

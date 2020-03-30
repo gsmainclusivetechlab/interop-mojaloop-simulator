@@ -28,17 +28,6 @@
 const Logger = require('@mojaloop/central-services-logger')
 const { pickBy, identity } = require('lodash')
 
-// module.exports = async (url, opts, span) => {
-//   Logger.isInfoEnabled && Logger.info(`Executing PUT: [${url}], HEADERS: [${JSON.stringify(opts.headers)}], BODY: [${JSON.stringify(opts.body)}]`)
-//   let optionsWithCleanHeaders = Object.assign({}, opts, { headers: pickBy(opts.headers, identity) })
-//   if (span) {
-//     optionsWithCleanHeaders = span.injectContextToHttpRequest(optionsWithCleanHeaders)
-//   }
-//   const res = await request(url, optionsWithCleanHeaders)
-//   Logger.isInfoEnabled && Logger.info((new Date().toISOString()), 'response: ', res.status)
-//   return res
-// }
-
 const httpKeepAlive = process.env.HTTP_KEEPALIVE || 'true'
 const httpKeepAliveMsecs = process.env.HTTP_KEEPALIVEMS || undefined
 const httpMaxSockets = process.env.HTTP_MAXSOCKETS || undefined
@@ -101,11 +90,10 @@ class HTTPRequestHandler {
    *
    * @param {string} url the endpoint for the service you require
    * @param {object} opts option config for axios - https://github.com/axios/axios#request-config
-   * @param {object} span a span for event logging if this request is within a span
    *
    *@return {object} The response for the request being sent or error object with response included
   */
-  async sendRequest (url, opts, span) {
+  async sendRequest (url, opts) {
     Logger.isInfoEnabled && Logger.info(`Executing request: [${url}], HEADERS: [${JSON.stringify(opts.headers)}], BODY: [${JSON.stringify(opts.body)}]`)
     const optionsWithCleanHeaders = Object.assign({}, opts, { headers: pickBy(opts.headers, identity) })
     const res = await this._requestInstance.request(url, optionsWithCleanHeaders)
@@ -122,6 +110,6 @@ const httpRequestHandler = new HTTPRequestHandler({
   )
 })
 
-module.exports = async (url, opts, span) => {
-  return httpRequestHandler.sendRequest(url, opts, span)
+module.exports = async (url, opts) => {
+  return httpRequestHandler.sendRequest(url, opts)
 }
