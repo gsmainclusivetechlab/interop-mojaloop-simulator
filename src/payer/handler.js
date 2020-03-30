@@ -317,7 +317,7 @@ exports.putQuotesById = function (request, h) {
     const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
 
     if (isTransferAmountInvalid) {
-      await putTransactionRequest(request, null, 'REJECTED', false)
+      await putTransactionRequest(request, null, 'REJECTED')
 
       return
     }
