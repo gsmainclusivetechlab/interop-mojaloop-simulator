@@ -56,12 +56,3 @@ npm run audit:check
 ```
 
 And commit the changed `audit-resolv.json` to ensure that CircleCI will build correctly.
-
-## Adding new PAYERFSP
-1. In the `src` folder, copy and rename the `localpayerfsp` folder according to the template `your instance name + payerfsp` (for example, `buildpayerfsp`).
-2. In your the new folder `buildpayerfsp` in the files `handler.js` and `routes.js` replace `localpayerfsp` word with your `instance name + payerfsp` (`buildpayerfsp`).
-3. For local testing - endpoints are changed in the `.env` file. An example of endpoints is in `.env.example` file.
-
-## Setting mojaloop endpoints for your servers:
-1. Repository - [gsma-mojaloop-simulator-environments](https://bitbucket.org/justcoded/gsma-mojaloop-simulator-environments/src/master/).
-2. Setting endpoints: [environments.yaml](https://bitbucket.org/justcoded/gsma-mojaloop-simulator-environments/src/master/environments.yaml).
