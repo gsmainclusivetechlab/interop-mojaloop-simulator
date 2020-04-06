@@ -82,7 +82,7 @@ module.exports = [
   },
   {
     method: 'PUT',
-    path: '/payerfsp/parties/{type}/{id}/error',
+    path: '/parties/{type}/{id}/error',
     handler: Handler.putPartiesByTypeIdAndError,
     options: {
       id: `simulator_${__dirname.split('/').pop()}_putPartiesByTypeIdAndError`,
