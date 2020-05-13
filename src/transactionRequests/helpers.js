@@ -13,17 +13,9 @@ exports.putTransactionRequest = async (request, cb, requestState, noTraceState) 
   const url = transactionRequestsEndpoint + '/transactionRequests/' + trxId
 
   try {
-    // amount to emulate test case "Transaction Request Rejected by Payer"
-    const INVALID_AMOUNT_VALUE = 15.15
-    const isAmountInvalid = parseFloat(
-      request.payload &&
-      request.payload.amount &&
-      request.payload.amount.amount
-    ) === INVALID_AMOUNT_VALUE
-
     const transactionRequestsResponse = {
       transactionId: trxId,
-      transactionRequestState: requestState || (isAmountInvalid ? 'REJECTED' : 'RECEIVED'),
+      transactionRequestState: requestState || 'RECEIVED',
       extensionList: request.payload.extensionList
     }
 
