@@ -312,8 +312,8 @@ exports.putQuotesById = function (request, h) {
 
     histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
 
-    // amount to emulate test case "Rejected transaction"
-    const INVALID_AMOUNT_VALUE = 10.1
+    // amount to emulate test case "Rejected Transaction by Payer FSP"
+    const INVALID_AMOUNT_VALUE = 1003
     const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
 
     if (isTransferAmountInvalid) {
