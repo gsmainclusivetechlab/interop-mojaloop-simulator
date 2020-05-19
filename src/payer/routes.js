@@ -360,5 +360,15 @@ module.exports = [
       tags: tags,
       description: 'Get details based on callback id'
     }
+  },
+  {
+    method: 'PUT',
+    path: '/authorizations/{id}',
+    handler: Handler.putAuthorizations,
+    options: {
+      id: `simulator_${__dirname.split('/').pop()}_putAuthorizations`,
+      tags: tags,
+      description: 'PUT Authorizations'
+    }
   }
 ]
