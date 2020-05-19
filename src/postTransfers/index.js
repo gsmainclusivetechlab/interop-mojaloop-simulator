@@ -8,7 +8,7 @@ const uuid = require('uuid')
 const transfersEndpoint =
   process.env.TRANSFERS_ENDPOINT || 'http://localhost:1080'
 
-exports.postTransfers = async ({ payload, headers }) => {
+exports.postTransfers = async ({ payload, headers }, extraPayload = {}) => {
   const EXPIRATION_TIME = 600000
   const url = `${transfersEndpoint}/transfers`
 
@@ -17,10 +17,10 @@ exports.postTransfers = async ({ payload, headers }) => {
       transferId: uuid.v4(),
       payerFsp: headers['fspiop-destination'],
       payeeFsp: headers['fspiop-source'],
-      amount: payload.transferAmount,
+      amount: (payload && payload.transferAmount) || extraPayload.transferAmount,
       expiration: new Date(new Date().getTime() + EXPIRATION_TIME),
-      ilpPacket: payload.ilpPacket,
-      condition: payload.condition
+      ilpPacket: (payload && payload.ilpPacket) || extraPayload.ilpPacket,
+      condition: (payload && payload.condition) || extraPayload.condition
     }
 
     const opts = {

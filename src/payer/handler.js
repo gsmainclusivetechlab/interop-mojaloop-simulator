@@ -34,8 +34,11 @@ const Enums = require('@mojaloop/central-services-shared').Enum
 const Metrics = require('../lib/metrics')
 const base64url = require('base64url')
 
+const { requestsCache } = require('../transactionRequests/helpers')
+
 const { putTransactionRequest } = require('../transactionRequests/helpers')
 const { postTransfers } = require('../postTransfers')
+const { getAuthorizations } = require('../getAuthorizations')
 
 const partiesEndpoint = process.env.PARTIES_ENDPOINT || 'http://localhost:1080'
 const quotesEndpoint = process.env.QUOTES_ENDPOINT || 'http://localhost:1080'
@@ -45,6 +48,7 @@ const transfersFulfilment = process.env.TRANSFERS_FULFILMENT || 'XoSz1cL0tljJSCp
 const transfersCondition = process.env.TRANSFERS_CONDITION || 'HOr22-H3AfTDHrSkPjJtVPRdKouuMkDXTR4ejlQa8Ks'
 const transfersIlpPacket = process.env.TRANSFERS_ILPPACKET || 'AQAAAAAAAADIEHByaXZhdGUucGF5ZWVmc3CCAiB7InRyYW5zYWN0aW9uSWQiOiIyZGY3NzRlMi1mMWRiLTRmZjctYTQ5NS0yZGRkMzdhZjdjMmMiLCJxdW90ZUlkIjoiMDNhNjA1NTAtNmYyZi00NTU2LThlMDQtMDcwM2UzOWI4N2ZmIiwicGF5ZWUiOnsicGFydHlJZEluZm8iOnsicGFydHlJZFR5cGUiOiJNU0lTRE4iLCJwYXJ0eUlkZW50aWZpZXIiOiIyNzcxMzgwMzkxMyIsImZzcElkIjoicGF5ZWVmc3AifSwicGVyc29uYWxJbmZvIjp7ImNvbXBsZXhOYW1lIjp7fX19LCJwYXllciI6eyJwYXJ0eUlkSW5mbyI6eyJwYXJ0eUlkVHlwZSI6Ik1TSVNETiIsInBhcnR5SWRlbnRpZmllciI6IjI3NzEzODAzOTExIiwiZnNwSWQiOiJwYXllcmZzcCJ9LCJwZXJzb25hbEluZm8iOnsiY29tcGxleE5hbWUiOnt9fX0sImFtb3VudCI6eyJjdXJyZW5jeSI6IlVTRCIsImFtb3VudCI6IjIwMCJ9LCJ0cmFuc2FjdGlvblR5cGUiOnsic2NlbmFyaW8iOiJERVBPU0lUIiwic3ViU2NlbmFyaW8iOiJERVBPU0lUIiwiaW5pdGlhdG9yIjoiUEFZRVIiLCJpbml0aWF0b3JUeXBlIjoiQ09OU1VNRVIiLCJyZWZ1bmRJbmZvIjp7fX19'
 const signature = process.env.MOCK_JWS_SIGNATURE || 'abcJjvNrkyK2KBieDUbGfhaBUn75aDUATNF4joqA8OLs4QgSD7i6EO8BIdy6Crph3LnXnTM20Ai1Z6nt0zliS_qPPLU9_vi6qLb15FOkl64DQs9hnfoGeo2tcjZJ88gm19uLY_s27AJqC1GH1B8E2emLrwQMDMikwQcYvXoyLrL7LL3CjaLMKdzR7KTcQi1tCK4sNg0noIQLpV3eA61kess'
+let transferAmount = {}
 
 const extractUrls = (request) => {
   const urls = {}
@@ -309,15 +313,25 @@ exports.putQuotesById = function (request, h) {
 
     callbackCache.set(request.params.id, incomingRequest)
     correlationCache.set(request.params.id, request.payload)
+    transferAmount = request.payload.transferAmount
 
     histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
 
     // amount to emulate test case "Rejected Transaction by Payer FSP"
-    const INVALID_AMOUNT_VALUE = 1003
-    const isTransferAmountInvalid = parseFloat(request.payload.transferAmount.amount) === INVALID_AMOUNT_VALUE
+    const AMOUNT_VALUE_REJECTED_TRANSACTION = 1003
+    // amount to emulate test case "Authorized Transaction by Payer FSP w/ Authorization Code"
+    const AMOUNT_VALUE_AUTHORIZATION = 1011
 
-    if (isTransferAmountInvalid) {
+    if (parseFloat(request.payload.transferAmount.amount) === AMOUNT_VALUE_REJECTED_TRANSACTION) {
       await putTransactionRequest(request, null, 'REJECTED')
+
+      return
+    }
+
+    if (parseFloat(request.payload.transferAmount.amount) === AMOUNT_VALUE_AUTHORIZATION) {
+      const trxId = requestsCache.get('transactionRequestId')
+
+      await getAuthorizations(request, trxId)
 
       return
     }
@@ -533,4 +547,24 @@ exports.getCallbackById = function (request, h) {
   histTimerEnd({ success: true, fsp: 'payer', operation: 'getCallbackById' })
 
   return h.response(responseData).code(Enums.Http.ReturnCodes.OK.CODE)
+}
+
+exports.putAuthorizations = function (request, h) {
+  (async () => {
+    Logger.info(`IN PAYERFSP:: PUT /authorizations/${request.params.id}, PAYLOAD: [${JSON.stringify(request.payload)}]`)
+
+    const payload = Object.assign({}, request.payload, {
+      // TODO: fallback object provided only for testing, should to be removed after testing
+      transferAmount: transferAmount || {
+        amount: 1011,
+        currency: 'USD'
+      },
+      condition: transfersCondition,
+      ilpPacket: transfersIlpPacket
+    })
+
+    await postTransfers(request, payload)
+  })()
+
+  return h.response().code(Enums.Http.ReturnCodes.ACCEPTED.CODE)
 }
