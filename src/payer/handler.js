@@ -133,6 +133,96 @@ exports.putPartiesByTypeIdAndError = function (request, h) {
 }
 
 // Section about Quotes
+exports.postQuotes = function (request, h) {
+  (async function () {
+    const histTimerEnd = Metrics.getHistogram(
+      'sim_request',
+      'Histogram for Simulator http operations',
+      ['success', 'fsp', 'operation', 'source', 'destination']
+    ).startTimer()
+
+    const metadata = `${request.method} ${request.path}`
+    const quotesRequest = request.payload
+
+    Logger.info((new Date().toISOString()), ['IN PAYERFSP::'], `received: ${metadata}. `)
+    Logger.info(`incoming request: ${quotesRequest.quoteId}`)
+
+    // Saving Incoming request
+    const incomingRequest = {
+      headers: request.headers,
+      data: request.payload
+    }
+
+    requestCache.set(quotesRequest.quoteId, incomingRequest)
+
+    const quotesResponse = {
+      transferAmount: {
+        amount: quotesRequest.amount.amount,
+        currency: quotesRequest.amount.currency
+      },
+      expiration: new Date(new Date().getTime() + 10000),
+      ilpPacket: transfersIlpPacket,
+      condition: transfersCondition
+    }
+
+    try {
+      const url = quotesEndpoint + '/quotes/' + quotesRequest.quoteId
+      const protectedHeader = {
+        alg: 'RS256',
+        'FSPIOP-Source': `${request.headers['fspiop-destination']}`,
+        'FSPIOP-Destination': `${request.headers['fspiop-source']}`,
+        'FSPIOP-URI': `/quotes/${quotesRequest.quoteId}`,
+        'FSPIOP-HTTP-Method': 'PUT',
+        Date: ''
+      }
+      const fspiopSignature = {
+        signature: signature,
+        protectedHeader: `${base64url.encode(JSON.stringify(protectedHeader))}`
+      }
+      const opts = {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/vnd.interoperability.quotes+json;version=1.0',
+          'FSPIOP-Source': request.headers['fspiop-destination'],
+          'FSPIOP-Destination': request.headers['fspiop-source'],
+          Date: new Date().toUTCString(),
+          'FSPIOP-Signature': `${JSON.stringify(fspiopSignature)}`,
+          'FSPIOP-HTTP-Method': 'PUT',
+          'FSPIOP-URI': `/quotes/${quotesRequest.quoteId}`,
+          traceparent: request.headers.traceparent ? request.headers.traceparent : undefined,
+          tracestate: request.headers.tracestate ? request.headers.tracestate : undefined
+        },
+        transformRequest: [(data, headers) => {
+          delete headers.common.Accept
+          return data
+        }],
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        }),
+        data: JSON.stringify(quotesResponse)
+      }
+
+      Logger.info((new Date().toISOString()), 'Executing PUT', url)
+
+      const response = await sendRequest(url, opts, request.span)
+
+      Logger.info((new Date().toISOString()), 'response: ', response.status)
+
+      if (response.status !== Enums.Http.ReturnCodes.ACCEPTED.CODE) {
+        throw new Error(`Failed to send. Result: ${response}`)
+      }
+
+      histTimerEnd({ success: true, fsp: 'payee', operation: 'postQuotes', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
+    } catch (err) {
+      Logger.error(err)
+
+      histTimerEnd({ success: false, fsp: 'payee', operation: 'postQuotes', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
+    }
+  })()
+
+  return h.response().code(Enums.Http.ReturnCodes.ACCEPTED.CODE)
+}
+
 exports.putQuotesById = function (request, h) {
   (async () => {
     const histTimerEnd = Metrics.getHistogram(

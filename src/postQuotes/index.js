@@ -20,13 +20,6 @@ exports.postQuotes = async ({ payload, headers }) => {
           partyIdType: payload.payer.partyIdType,
           partyIdentifier: payload.payer.partyIdentifier,
           fspId: payload.payer.fspId
-        },
-        personalInfo: {
-          complexName: {
-            firstName: 'John',
-            lastName: 'Doe'
-          },
-          dateOfBirth: '1970-01-01'
         }
       },
       payee: {
