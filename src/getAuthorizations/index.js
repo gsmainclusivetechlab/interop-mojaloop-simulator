@@ -22,7 +22,7 @@ exports.getAuthorizations = async ({ payload, headers }, id) => {
         'FSPIOP-Destination': headers['fspiop-source'],
         traceparent: headers.traceparent
       }
-    };
+    }
 
     const response = await sendRequest(url, opts)
     Logger.info(`response: ${response.status}`)

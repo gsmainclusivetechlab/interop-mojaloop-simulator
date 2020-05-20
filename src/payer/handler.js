@@ -224,14 +224,6 @@ exports.postQuotes = function (request, h) {
         amount: quotesRequest.amount.amount,
         currency: quotesRequest.amount.currency
       },
-      payeeFspFee: {
-        amount: '1',
-        currency: quotesRequest.amount.currency
-      },
-      payeeFspCommission: {
-        amount: '1',
-        currency: quotesRequest.amount.currency
-      },
       expiration: new Date(new Date().getTime() + 10000),
       ilpPacket: transfersIlpPacket,
       condition: transfersCondition
