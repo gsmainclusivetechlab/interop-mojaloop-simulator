@@ -14,9 +14,9 @@ exports.getAuthorizations = async ({ payload, headers }, id) => {
     const opts = {
       method: 'GET',
       headers: {
-        Accept: 'application/json',
+        Accept: 'application/vnd.interoperability.authorizations+json;version=1',
         'Content-Type':
-          'application/vnd.interoperability.transfers+json;version=1.0',
+          'application/vnd.interoperability.authorizations+json;version=1.0',
         Date: new Date().toUTCString(),
         'FSPIOP-Source': headers['fspiop-destination'],
         'FSPIOP-Destination': headers['fspiop-source'],
