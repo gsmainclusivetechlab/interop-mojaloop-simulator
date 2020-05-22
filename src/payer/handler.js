@@ -558,5 +558,5 @@ exports.putAuthorizations = function (request, h) {
     await postTransfers(request, payload)
   })()
 
-  return h.response().code(Enums.Http.ReturnCodes.ACCEPTED.CODE)
+  return h.response().code(Enums.Http.ReturnCodes.OK.CODE)
 }
