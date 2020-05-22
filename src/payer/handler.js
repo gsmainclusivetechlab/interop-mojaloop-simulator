@@ -315,7 +315,7 @@ exports.putQuotesById = function (request, h) {
     const AMOUNT_VALUE_AUTHORIZATION = 1011
 
     if (parseFloat(request.payload.transferAmount.amount) === AMOUNT_VALUE_REJECTED_TRANSACTION) {
-      await putTransactionRequest(request, null, 'REJECTED')
+      await putTransactionRequest(request, null, 'REJECTED', true)
 
       return
     }

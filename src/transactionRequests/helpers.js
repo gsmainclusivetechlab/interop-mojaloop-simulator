@@ -8,7 +8,7 @@ const { requestsCache } = require('./handler')
 
 const transactionRequestsEndpoint = process.env.TRANSACTION_REQUESTS_ENDPOINT || 'http://moja-transaction-requests-service'
 
-exports.putTransactionRequest = async (request, cb, requestState) => {
+exports.putTransactionRequest = async (request, cb, requestState, noTraceState) => {
   const trxId = requestsCache.get('transactionRequestId')
   const url = transactionRequestsEndpoint + '/transactionRequests/' + trxId
 
@@ -29,7 +29,7 @@ exports.putTransactionRequest = async (request, cb, requestState) => {
         'FSPIOP-HTTP-Method': 'PUT',
         'FSPIOP-URI': `/transactionRequests/${trxId}`,
         traceparent: request.headers.traceparent ? request.headers.traceparent : undefined,
-        tracestate: request.headers.tracestate ? request.headers.tracestate : undefined
+        tracestate: !noTraceState && request.headers.tracestate ? request.headers.tracestate : undefined
       },
       transformRequest: [(data, headers) => {
         delete headers.common.Accept
