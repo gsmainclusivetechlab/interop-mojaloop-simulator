@@ -546,11 +546,7 @@ exports.putAuthorizations = function (request, h) {
     Logger.info(`IN PAYERFSP:: PUT /authorizations/${request.params.id}, PAYLOAD: [${JSON.stringify(request.payload)}]`)
 
     const payload = Object.assign({}, request.payload, {
-      // TODO: fallback object provided only for testing, should to be removed after testing
-      transferAmount: transferAmount || {
-        amount: 1011,
-        currency: 'USD'
-      },
+      transferAmount: transferAmount,
       condition: transfersCondition,
       ilpPacket: transfersIlpPacket
     })
