@@ -39,6 +39,7 @@ const { requestsCache } = require('../transactionRequests/helpers')
 const { putTransactionRequest } = require('../transactionRequests/helpers')
 const { postTransfers } = require('../postTransfers')
 const { getAuthorizations } = require('../getAuthorizations')
+const { isRejectedTransactionFlow, isOTPVerificationFlow } = require('../helpers')
 
 const partiesEndpoint = process.env.PARTIES_ENDPOINT || 'http://localhost:1080'
 const quotesEndpoint = process.env.QUOTES_ENDPOINT || 'http://localhost:1080'
@@ -309,18 +310,13 @@ exports.putQuotesById = function (request, h) {
 
     histTimerEnd({ success: true, fsp: 'payer', operation: 'putQuotesById', source: request.headers['fspiop-source'], destination: request.headers['fspiop-destination'] })
 
-    // amount to emulate test case "Rejected Transaction by Payer FSP"
-    const AMOUNT_VALUE_REJECTED_TRANSACTION = 1003
-    // amount to emulate test case "Authorized Transaction by Payer FSP w/ Authorization Code"
-    const AMOUNT_VALUE_AUTHORIZATION = 1011
-
-    if (parseFloat(request.payload.transferAmount.amount) === AMOUNT_VALUE_REJECTED_TRANSACTION) {
+    if (isRejectedTransactionFlow(request.payload.transferAmount.amount)) {
       await putTransactionRequest(request, null, 'REJECTED', true)
 
       return
     }
 
-    if (parseFloat(request.payload.transferAmount.amount) === AMOUNT_VALUE_AUTHORIZATION) {
+    if (isOTPVerificationFlow(request.payload.transferAmount.amount)) {
       const trxId = requestsCache.get('transactionRequestId')
 
       await getAuthorizations(request, trxId)
