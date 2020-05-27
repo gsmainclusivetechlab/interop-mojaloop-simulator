@@ -38,7 +38,12 @@ const { requestsCache } = require('../transactionRequests/helpers')
 const { putTransactionRequest } = require('../transactionRequests/helpers')
 const { postTransfers } = require('../postTransfers')
 const { getAuthorizations } = require('../getAuthorizations')
-const { isRejectedTransactionFlow, isOTPVerificationFlow } = require('../helpers')
+const {
+  isRejectedTransactionFlow,
+  isOTPVerificationFlow,
+  isPutQuotesError,
+  isPutTransfersError
+} = require('../helpers')
 
 const transfersCondition = process.env.TRANSFERS_CONDITION || 'HOr22-H3AfTDHrSkPjJtVPRdKouuMkDXTR4ejlQa8Ks'
 const transfersIlpPacket = process.env.TRANSFERS_ILPPACKET || 'AQAAAAAAAADIEHByaXZhdGUucGF5ZWVmc3CCAiB7InRyYW5zYWN0aW9uSWQiOiIyZGY3NzRlMi1mMWRiLTRmZjctYTQ5NS0yZGRkMzdhZjdjMmMiLCJxdW90ZUlkIjoiMDNhNjA1NTAtNmYyZi00NTU2LThlMDQtMDcwM2UzOWI4N2ZmIiwicGF5ZWUiOnsicGFydHlJZEluZm8iOnsicGFydHlJZFR5cGUiOiJNU0lTRE4iLCJwYXJ0eUlkZW50aWZpZXIiOiIyNzcxMzgwMzkxMyIsImZzcElkIjoicGF5ZWVmc3AifSwicGVyc29uYWxJbmZvIjp7ImNvbXBsZXhOYW1lIjp7fX19LCJwYXllciI6eyJwYXJ0eUlkSW5mbyI6eyJwYXJ0eUlkVHlwZSI6Ik1TSVNETiIsInBhcnR5SWRlbnRpZmllciI6IjI3NzEzODAzOTExIiwiZnNwSWQiOiJwYXllcmZzcCJ9LCJwZXJzb25hbEluZm8iOnsiY29tcGxleE5hbWUiOnt9fX0sImFtb3VudCI6eyJjdXJyZW5jeSI6IlVTRCIsImFtb3VudCI6IjIwMCJ9LCJ0cmFuc2FjdGlvblR5cGUiOnsic2NlbmFyaW8iOiJERVBPU0lUIiwic3ViU2NlbmFyaW8iOiJERVBPU0lUIiwiaW5pdGlhdG9yIjoiUEFZRVIiLCJpbml0aWF0b3JUeXBlIjoiQ09OU1VNRVIiLCJyZWZ1bmRJbmZvIjp7fX19'
@@ -140,6 +145,7 @@ exports.postQuotes = function (request, h) {
 
     const metadata = `${request.method} ${request.path}`
     const quotesRequest = request.payload
+    const errorSuffix = isPutQuotesError(quotesRequest.amount.amount) ? '/error' : ''
 
     Logger.info((new Date().toISOString()), ['IN PAYERFSP::'], `received: ${metadata}. `)
     Logger.info(`incoming request: ${quotesRequest.quoteId}`)
@@ -152,18 +158,25 @@ exports.postQuotes = function (request, h) {
 
     requestCache.set(quotesRequest.quoteId, incomingRequest)
 
-    const quotesResponse = {
-      transferAmount: {
-        amount: quotesRequest.amount.amount,
-        currency: quotesRequest.amount.currency
-      },
-      expiration: new Date(new Date().getTime() + 10000),
-      ilpPacket: transfersIlpPacket,
-      condition: transfersCondition
-    }
+    const quotesResponse = errorSuffix
+      ? {
+        errorInformation: {
+          errorCode: '5103',
+          errorDescription: 'Payer FSP does not want to proceed with the financial transaction after receiving a quote.'
+        }
+      }
+      : {
+        transferAmount: {
+          amount: quotesRequest.amount.amount,
+          currency: quotesRequest.amount.currency
+        },
+        expiration: new Date(new Date().getTime() + 10000),
+        ilpPacket: transfersIlpPacket,
+        condition: transfersCondition
+      }
 
     try {
-      const url = quotesEndpoint + '/quotes/' + quotesRequest.quoteId
+      const url = quotesEndpoint + '/quotes/' + quotesRequest.quoteId + errorSuffix
       const protectedHeader = {
         alg: 'RS256',
         'FSPIOP-Source': `${request.headers['fspiop-destination']}`,
@@ -277,6 +290,113 @@ exports.putQuotesByIdAndError = function (request, h) {
 }
 
 // Section about Transfers
+exports.postTransfers = async function (request, h) {
+  const histTimerEnd = Metrics.getHistogram(
+    'sim_request',
+    'Histogram for Simulator http operations',
+    ['success', 'fsp', 'operation', 'source', 'destination']
+  ).startTimer()
+
+  Logger.debug(`[cid=${request.payload.transferId}, fsp=${request.headers['fspiop-source']}, source=${request.headers['fspiop-source']}, dest=${request.headers['fspiop-destination']}] ~ Simulator::api::payee::postTransfers - START`)
+
+  const metadata = `${request.method} ${request.path} ${request.payload.transferId}`
+
+  Logger.info(`IN PAYERFSP:: received: ${metadata}.`)
+
+  if (!transfersFulfilResponseDisabled) {
+    // Saving Incoming request
+    const incomingRequest = {
+      headers: request.headers,
+      data: request.payload
+    }
+    requestCache.set(request.payload.transferId, incomingRequest)
+
+    const errorSuffix = isPutTransfersError(transferAmount.amount) ? '/error' : ''
+
+    const url = transfersEndpoint + '/transfers/' + request.payload.transferId + errorSuffix
+    const fspiopUriHeader = `/transfers/${request.payload.transferId}`
+    try {
+      const transfersResponse = errorSuffix
+        ? {
+          errorInformation: {
+            errorCode: '5001',
+            errorDescription: 'Payer FSP has insufficient liquidity to perform the transfer.'
+          }
+        }
+        : {
+          fulfilment: transfersFulfilment,
+          completedTimestamp: new Date().toISOString(),
+          transferState: 'COMMITTED'
+        }
+
+      const protectedHeader = {
+        alg: 'RS256',
+        'FSPIOP-Source': `${request.headers['fspiop-destination']}`,
+        'FSPIOP-Destination': `${request.headers['fspiop-source']}`,
+        'FSPIOP-URI': `/transfers/${request.payload.transferId}`,
+        'FSPIOP-HTTP-Method': 'PUT',
+        Date: ''
+      }
+      const fspiopSignature = {
+        signature: signature,
+        protectedHeader: `${base64url.encode(JSON.stringify(protectedHeader))}`
+      }
+      const opts = {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/vnd.interoperability.transfers+json;version=1.0',
+          'FSPIOP-Source': request.headers['fspiop-destination'],
+          'FSPIOP-Destination': request.headers['fspiop-source'],
+          Date: new Date().toUTCString(),
+          'FSPIOP-Signature': JSON.stringify(fspiopSignature),
+          'FSPIOP-HTTP-Method': 'PUT',
+          'FSPIOP-URI': fspiopUriHeader,
+          traceparent: request.headers.traceparent ? request.headers.traceparent : undefined,
+          tracestate: request.headers.tracestate ? request.headers.tracestate : undefined
+        },
+        data: JSON.stringify(transfersResponse)
+      }
+
+      Logger.info(`Executing PUT: [${url}], HEADERS: [${JSON.stringify(opts.headers)}], BODY: [${JSON.stringify(transfersResponse)}]`)
+
+      const response = await sendRequest(url, opts, request.span)
+
+      Logger.info(`response: ${response.status}`)
+
+      if (response.status !== Enums.Http.ReturnCodes.ACCEPTED.CODE) {
+        throw new Error(`Failed to send. Result: ${JSON.stringify(response)}`)
+      }
+      histTimerEnd({
+        success: true,
+        fsp: 'payee',
+        operation: 'postTransfers',
+        source: request.headers['fspiop-source'],
+        destination: request.headers['fspiop-destination']
+      })
+    } catch (err) {
+      Logger.error(err)
+
+      histTimerEnd({
+        success: false,
+        fsp: 'payee',
+        operation: 'postTransfers',
+        source: request.headers['fspiop-source'],
+        destination: request.headers['fspiop-destination']
+      })
+    }
+  } else {
+    histTimerEnd({
+      success: true,
+      fsp: 'payee',
+      operation: 'postTransfers',
+      source: request.headers['fspiop-source'],
+      destination: request.headers['fspiop-destination']
+    })
+  }
+
+  return h.response().code(Enums.Http.ReturnCodes.ACCEPTED.CODE)
+}
+
 exports.putTransfersById = function (request, h) {
   const histTimerEnd = Metrics.getHistogram(
     'sim_request',

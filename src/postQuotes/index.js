@@ -54,7 +54,7 @@ exports.postQuotes = async ({ payload, headers }) => {
         'FSPIOP-Source': headers['fspiop-destination'],
         'FSPIOP-Destination': headers['fspiop-source'],
         'FSPIOP-Signature': headers['fspiop-signature'],
-        Authorization: `Bearer {{${headers['fspiop-destination'].toUpperCase()}_BEARER_TOKEN}}`,
+        Authorization: 'Bearer Token',
         traceparent: headers.traceparent
       },
       transformRequest: [
