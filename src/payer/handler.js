@@ -39,7 +39,12 @@ const { requestsCache } = require('../transactionRequests/helpers')
 const { putTransactionRequest } = require('../transactionRequests/helpers')
 const { postTransfers } = require('../postTransfers')
 const { getAuthorizations } = require('../getAuthorizations')
-const { isRejectedTransactionFlow, isOTPVerificationFlow } = require('../helpers')
+const {
+  isRejectedTransactionFlow,
+  isOTPVerificationFlow,
+  isPutQuotesError,
+  isPutTransfersError
+} = require('../helpers')
 
 const partiesEndpoint = process.env.PARTIES_ENDPOINT || 'http://localhost:1080'
 const quotesEndpoint = process.env.QUOTES_ENDPOINT || 'http://localhost:1080'
@@ -208,6 +213,7 @@ exports.postQuotes = function (request, h) {
 
     const metadata = `${request.method} ${request.path}`
     const quotesRequest = request.payload
+    const errorSuffix = isPutQuotesError(quotesRequest.amount.amount) ? '/error' : ''
 
     Logger.info((new Date().toISOString()), ['IN PAYERFSP::'], `received: ${metadata}. `)
     Logger.info(`incoming request: ${quotesRequest.quoteId}`)
@@ -220,18 +226,25 @@ exports.postQuotes = function (request, h) {
 
     requestCache.set(quotesRequest.quoteId, incomingRequest)
 
-    const quotesResponse = {
-      transferAmount: {
-        amount: quotesRequest.amount.amount,
-        currency: quotesRequest.amount.currency
-      },
-      expiration: new Date(new Date().getTime() + 10000),
-      ilpPacket: transfersIlpPacket,
-      condition: transfersCondition
-    }
+    const quotesResponse = errorSuffix
+      ? {
+        errorInformation: {
+          errorCode: '5103',
+          errorDescription: 'Payer FSP does not want to proceed with the financial transaction after receiving a quote.'
+        }
+      }
+      : {
+        transferAmount: {
+          amount: quotesRequest.amount.amount,
+          currency: quotesRequest.amount.currency
+        },
+        expiration: new Date(new Date().getTime() + 10000),
+        ilpPacket: transfersIlpPacket,
+        condition: transfersCondition
+      }
 
     try {
-      const url = quotesEndpoint + '/quotes/' + quotesRequest.quoteId
+      const url = quotesEndpoint + '/quotes/' + quotesRequest.quoteId + errorSuffix
       const protectedHeader = {
         alg: 'RS256',
         'FSPIOP-Source': `${request.headers['fspiop-destination']}`,
@@ -366,14 +379,24 @@ exports.postTransfers = async function (request, h) {
     }
     requestCache.set(request.payload.transferId, incomingRequest)
 
-    const url = transfersEndpoint + '/transfers/' + request.payload.transferId
+    const errorSuffix = isPutTransfersError(transferAmount.amount) ? '/error' : ''
+
+    const url = transfersEndpoint + '/transfers/' + request.payload.transferId + errorSuffix
     const fspiopUriHeader = `/transfers/${request.payload.transferId}`
     try {
-      const transfersResponse = {
-        fulfilment: transfersFulfilment,
-        completedTimestamp: new Date().toISOString(),
-        transferState: 'COMMITTED'
-      }
+      const transfersResponse = errorSuffix
+        ? {
+          errorInformation: {
+            errorCode: '5001',
+            errorDescription: 'Payer FSP has insufficient liquidity to perform the transfer.'
+          }
+        }
+        : {
+          fulfilment: transfersFulfilment,
+          completedTimestamp: new Date().toISOString(),
+          transferState: 'COMMITTED'
+        }
+
       const protectedHeader = {
         alg: 'RS256',
         'FSPIOP-Source': `${request.headers['fspiop-destination']}`,
