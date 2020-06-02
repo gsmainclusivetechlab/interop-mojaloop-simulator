@@ -47,6 +47,7 @@ jspm_packages
 .vscode
 
 .npmrc
+.env
 
 # --------------- #
 # IntelliJ #
