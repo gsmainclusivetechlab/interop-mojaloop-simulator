@@ -249,7 +249,6 @@ workflows:
   build_and_test:
     jobs:
       - setup:
-          context: org-global
           filters:
             tags:
               only: /.*/
@@ -258,7 +257,6 @@ workflows:
                 - /feature*/
                 - /bugfix*/
       - vulnerability-check:
-          context: org-global
           requires:
             - setup
           filters:
@@ -269,7 +267,6 @@ workflows:
                 - /feature*/
                 - /bugfix*/
       - audit-licenses:
-          context: org-global
           requires:
             - setup
           filters:
@@ -280,7 +277,6 @@ workflows:
                 - /feature*/
                 - /bugfix*/
       - build:
-          context: org-global
           requires:
             - setup
             - vulnerability-check
@@ -292,7 +288,6 @@ workflows:
               ignore:
                 - /.*/
       # - license-scan:
-      #     context: org-global
       #     requires:
       #       - build
       #     filters:
@@ -302,7 +297,6 @@ workflows:
       #         ignore:
       #           - /.*/
       # - image-scan:
-      #     context: org-global
       #     requires:
       #       - build
       #     filters:
@@ -312,7 +306,6 @@ workflows:
       #         ignore:
       #           - /.*/
       # - publish:
-      #     context: org-global
       #     requires:
       #       - license-scan
       #       - image-scan
@@ -323,7 +316,6 @@ workflows:
       #         ignore:
       #           - /.*/
       # - deploy:
-      #     context: org-global
       #     requires:
       #       - publish
       #     filters:
