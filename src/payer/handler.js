@@ -520,8 +520,7 @@ exports.getCorrelationId = function (request, h) {
     ['success', 'fsp', 'operation', 'source', 'destination']
   ).startTimer()
 
-  Logger.isInfoEnabled && Logger.info(`IN PAYERFSP:: PUT /correlationid/${request.params.id}, CACHE: [${JSON.stringify(correlationCache.get(request.params.id))}]`);
-  
+  Logger.isInfoEnabled && Logger.info(`IN PAYERFSP:: PUT /correlationid/${request.params.id}, CACHE: [${JSON.stringify(correlationCache.get(request.params.id))}]`)
 
   const responseData = correlationCache.get(request.params.id)
 

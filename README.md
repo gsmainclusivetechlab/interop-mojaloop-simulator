@@ -1,9 +1,9 @@
 # simulators
 
-[![Git Commit](https://img.shields.io/github/last-commit/mojaloop/simulator.svg?style=flat)](https://github.com/mojaloop/simulator/commits/master)
-[![Git Releases](https://img.shields.io/github/release/mojaloop/simulator.svg?style=flat)](https://github.com/mojaloop/simulator/releases)
-[![Docker pulls](https://img.shields.io/docker/pulls/mojaloop/simulator.svg?style=flat)](https://hub.docker.com/r/mojaloop/simulator)
-[![CircleCI](https://circleci.com/gh/mojaloop/simulator.svg?style=svg)](https://circleci.com/gh/mojaloop/simulator)
+[![Git Commit](https://img.shields.io/github/last-commit/gsmainclusivetechlab/interop-mojaloop-simulator.svg?style=flat)](https://github.com/gsmainclusivetechlab/interop-mojaloop-simulator/commits/master)
+[![Git Releases](https://img.shields.io/github/release/gsmainclusivetechlab/interop-mojaloop-simulator.svg?style=flat)](https://github.com/gsmainclusivetechlab/interop-mojaloop-simulator/releases)
+[![Docker pulls](https://img.shields.io/docker/pulls/gsmainclusivetechlab/interop-mojaloop-simulator.svg?style=flat)](https://hub.docker.com/r/gsmainclusivetechlab/interop-mojaloop-simulator)
+[![CircleCI](https://circleci.com/gh/gsmainclusivetechlab/interop-mojaloop-simulator.svg?style=svg)](https://circleci.com/gh/gsmainclusivetechlab/interop-mojaloop-simulator)
 
 Simulators that act as mock payer fsp and payee fsp which interact with the Switch.
 
@@ -41,7 +41,7 @@ Simulators that act as mock payer fsp and payee fsp which interact with the Swit
 
 ## Auditing Dependencies
 
-We use `npm-audit-resolver` along with `npm audit` to check dependencies for vulnerabilities, and keep track of resolved dependencies with an `audit-resolv.json` file.
+We use `npm-audit-resolver` along with `npm audit` to check dependencies for vulnerabilities, and keep track of resolved dependencies with an `audit-resolve.json` file.
 
 To start a new resolution process, run:
 ```bash
@@ -53,4 +53,4 @@ You can then check to see if the CI will pass based on the current dependencies 
 npm run audit:check
 ```
 
-And commit the changed `audit-resolv.json` to ensure that CircleCI will build correctly.
+And commit the changed `audit-resolve.json` to ensure that CircleCI will build correctly.
