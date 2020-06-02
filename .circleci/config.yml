@@ -8,7 +8,7 @@ version: 2.1
 ##
 orbs:
   anchore: anchore/anchore-engine@1.6.0
-  deploy-kube: mojaloop/deployment@0.1.6
+  # deploy-kube: mojaloop/deployment@0.1.6
 
 ##
 # defaults
@@ -136,113 +136,113 @@ jobs:
           paths:
             - ./docker-image.tar
 
-  license-scan:
-    executor: default-machine
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - run:
-          name: Load the pre-built docker image from workspace
-          command: docker load -i /tmp/docker-image.tar
-      - run:
-          <<: *defaults_license_scanner
-      - run:
-          name: Run the license-scanner
-          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
-      - store_artifacts:
-          path: /tmp/license-scanner/results
-          prefix: licenses
+  # license-scan:
+  #   executor: default-machine
+  #   steps:
+  #     - attach_workspace:
+  #         at: /tmp
+  #     - run:
+  #         name: Load the pre-built docker image from workspace
+  #         command: docker load -i /tmp/docker-image.tar
+  #     - run:
+  #         <<: *defaults_license_scanner
+  #     - run:
+  #         name: Run the license-scanner
+  #         command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
+  #     - store_artifacts:
+  #         path: /tmp/license-scanner/results
+  #         prefix: licenses
 
-  image-scan:
-    executor: anchore/anchore_engine
-    steps:
-      - setup_remote_docker
-      - checkout
-      - run:
-          name: Install AWS CLI dependencies
-          command: *defaults_awsCliDependencies
-      - attach_workspace:
-          at: /tmp
-      - run:
-          name: Load the pre-built docker image from workspace
-          command: docker load -i /tmp/docker-image.tar
-      - anchore/analyze_local_image:
-          dockerfile_path: ./Dockerfile
-          image_name: ${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}
-          # Anchore bug: if policy_failure is `true`, reports don't get written - we manually check for failures below
-          policy_failure: false
-          timeout: '500'
-      - run:
-          name: Evaluate Failures.
-          command: |
-            if [[ ! $(which jq) ]]; then
-              (set +o pipefail; apk add jq || apt-get install -y jq || yum install -y jq)
-            fi
-            if [[ $(ls anchore-reports/*content-os*.json 2> /dev/null) ]]; then
-              printf "\n%s\n" "The following OS packages are installed:"
-              jq '[.content | sort_by(.package) | .[] | {package: .package, version: .version}]' anchore-reports/*content-os*.json
-            fi
-            if [[ $(ls anchore-reports/*vuln*.json 2> /dev/null) ]]; then
-              printf "\n%s\n" "The following vulnerabilities were found:"
-              jq '[.vulnerabilities | group_by(.package) | .[] | {package: .[0].package, vuln: [.[].vuln]}]' anchore-reports/*vuln*.json
-            fi
-      - run:
-          name: Upload Anchore reports to s3
-          command: |
-            aws s3 cp anchore-reports ${AWS_S3_DIR_ANCHORE_REPORTS}/${CIRCLE_PROJECT_REPONAME}/ --recursive
-            aws s3 rm ${AWS_S3_DIR_ANCHORE_REPORTS}/latest/ --recursive --exclude "*" --include "${CIRCLE_PROJECT_REPONAME}*"
-            aws s3 cp anchore-reports ${AWS_S3_DIR_ANCHORE_REPORTS}/latest/ --recursive
+  # image-scan:
+  #   executor: anchore/anchore_engine
+  #   steps:
+  #     - setup_remote_docker
+  #     - checkout
+  #     - run:
+  #         name: Install AWS CLI dependencies
+  #         command: *defaults_awsCliDependencies
+  #     - attach_workspace:
+  #         at: /tmp
+  #     - run:
+  #         name: Load the pre-built docker image from workspace
+  #         command: docker load -i /tmp/docker-image.tar
+  #     - anchore/analyze_local_image:
+  #         dockerfile_path: ./Dockerfile
+  #         image_name: ${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}
+  #         # Anchore bug: if policy_failure is `true`, reports don't get written - we manually check for failures below
+  #         policy_failure: false
+  #         timeout: '500'
+  #     - run:
+  #         name: Evaluate Failures.
+  #         command: |
+  #           if [[ ! $(which jq) ]]; then
+  #             (set +o pipefail; apk add jq || apt-get install -y jq || yum install -y jq)
+  #           fi
+  #           if [[ $(ls anchore-reports/*content-os*.json 2> /dev/null) ]]; then
+  #             printf "\n%s\n" "The following OS packages are installed:"
+  #             jq '[.content | sort_by(.package) | .[] | {package: .package, version: .version}]' anchore-reports/*content-os*.json
+  #           fi
+  #           if [[ $(ls anchore-reports/*vuln*.json 2> /dev/null) ]]; then
+  #             printf "\n%s\n" "The following vulnerabilities were found:"
+  #             jq '[.vulnerabilities | group_by(.package) | .[] | {package: .[0].package, vuln: [.[].vuln]}]' anchore-reports/*vuln*.json
+  #           fi
+  #     - run:
+  #         name: Upload Anchore reports to s3
+  #         command: |
+  #           aws s3 cp anchore-reports ${AWS_S3_DIR_ANCHORE_REPORTS}/${CIRCLE_PROJECT_REPONAME}/ --recursive
+  #           aws s3 rm ${AWS_S3_DIR_ANCHORE_REPORTS}/latest/ --recursive --exclude "*" --include "${CIRCLE_PROJECT_REPONAME}*"
+  #           aws s3 cp anchore-reports ${AWS_S3_DIR_ANCHORE_REPORTS}/latest/ --recursive
 
-            # TODO: Enable this when we want to increase the strictness of our security policies
-            # failCount=$(cat anchore-reports/*policy*.json | grep 'fail' | wc -l)
-            # echo "FailCount is: ${failCount}"
-            # if [ $failCount -gt 0 ]; then
-            #   printf "Failed with a policy failure count of: ${failCount}"
-            #   exit 1
-            # fi
-      - store_artifacts:
-          path: anchore-reports
+  #           # TODO: Enable this when we want to increase the strictness of our security policies
+  #           # failCount=$(cat anchore-reports/*policy*.json | grep 'fail' | wc -l)
+  #           # echo "FailCount is: ${failCount}"
+  #           # if [ $failCount -gt 0 ]; then
+  #           #   printf "Failed with a policy failure count of: ${failCount}"
+  #           #   exit 1
+  #           # fi
+  #     - store_artifacts:
+  #         path: anchore-reports
 
-  publish:
-    executor: default-machine
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp
-      - run:
-          name: Load the pre-built docker image from workspace
-          command: docker load -i /tmp/docker-image.tar
-      - run:
-          name: Login to Docker Hub
-          command: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run:
-          name: Re-tag pre built image
-          command: |
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
-      - run:
-          name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
-          command: |
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
-      - run:
-          name: Slack announcement for tag releases
-          command: |
-            curl -X POST \
-              $SLACK_WEBHOOK_ANNOUNCEMENT \
-              -H 'Content-type: application/json' \
-              -H 'cache-control: no-cache' \
-              -d "{\"text\": \"*${CIRCLE_PROJECT_REPONAME}* - Release \`${CIRCLE_TAG}\`: https://github.com/mojaloop/${CIRCLE_PROJECT_REPONAME}/releases/tag/${CIRCLE_TAG}\"}"
+  # publish:
+  #   executor: default-machine
+  #   steps:
+  #     - checkout
+  #     - attach_workspace:
+  #         at: /tmp
+  #     - run:
+  #         name: Load the pre-built docker image from workspace
+  #         command: docker load -i /tmp/docker-image.tar
+  #     - run:
+  #         name: Login to Docker Hub
+  #         command: docker login -u $DOCKER_USER -p $DOCKER_PASS
+  #     - run:
+  #         name: Re-tag pre built image
+  #         command: |
+  #           docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
+  #     - run:
+  #         name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
+  #         command: |
+  #           echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG"
+  #           docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+  #           echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
+  #           docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
+  #     - run:
+  #         name: Slack announcement for tag releases
+  #         command: |
+  #           curl -X POST \
+  #             $SLACK_WEBHOOK_ANNOUNCEMENT \
+  #             -H 'Content-type: application/json' \
+  #             -H 'cache-control: no-cache' \
+  #             -d "{\"text\": \"*${CIRCLE_PROJECT_REPONAME}* - Release \`${CIRCLE_TAG}\`: https://github.com/mojaloop/${CIRCLE_PROJECT_REPONAME}/releases/tag/${CIRCLE_TAG}\"}"
 
-  deploy:
-    executor: deploy-kube/helm-kube
-    steps:
-      - checkout
-      - deploy-kube/setup_and_run:
-          helm_set_values: |
-            --set simulator.image.repository=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME \
-            --set simulator.image.tag=$CIRCLE_TAG
+  # deploy:
+  #   executor: deploy-kube/helm-kube
+  #   steps:
+  #     - checkout
+  #     - deploy-kube/setup_and_run:
+  #         helm_set_values: |
+  #           --set simulator.image.repository=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME \
+  #           --set simulator.image.tag=$CIRCLE_TAG
 
 workflows:
   version: 2
@@ -291,44 +291,44 @@ workflows:
             branches:
               ignore:
                 - /.*/
-      - license-scan:
-          context: org-global
-          requires:
-            - build
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-            branches:
-              ignore:
-                - /.*/
-      - image-scan:
-          context: org-global
-          requires:
-            - build
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-            branches:
-              ignore:
-                - /.*/
-      - publish:
-          context: org-global
-          requires:
-            - license-scan
-            - image-scan
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-            branches:
-              ignore:
-                - /.*/
-      - deploy:
-          context: org-global
-          requires:
-            - publish
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?/
-            branches:
-              ignore:
-                - /.*/
+      # - license-scan:
+      #     context: org-global
+      #     requires:
+      #       - build
+      #     filters:
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
+      #       branches:
+      #         ignore:
+      #           - /.*/
+      # - image-scan:
+      #     context: org-global
+      #     requires:
+      #       - build
+      #     filters:
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
+      #       branches:
+      #         ignore:
+      #           - /.*/
+      # - publish:
+      #     context: org-global
+      #     requires:
+      #       - license-scan
+      #       - image-scan
+      #     filters:
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
+      #       branches:
+      #         ignore:
+      #           - /.*/
+      # - deploy:
+      #     context: org-global
+      #     requires:
+      #       - publish
+      #     filters:
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?/
+      #       branches:
+      #         ignore:
+      #           - /.*/
