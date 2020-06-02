@@ -40,7 +40,7 @@ module.exports = [
     options: {
       id: `simulator_${__dirname.split('/').pop()}_getTransactionRequest`,
       tags: tags,
-      description: 'Get a transaction request by ID',
+      description: 'Get a transaction request by ID'
       // validate: {
       //   headers: Joi.object({
       //     accept: Joi.string().optional().regex(regexAccept),
@@ -69,7 +69,7 @@ module.exports = [
     config: {
       id: `simulator_${__dirname.split('/').pop()}_postTransactionRequest`,
       tags: tags,
-      description: 'Incoming Transaction Request',
+      description: 'Incoming Transaction Request'
       // payload: {
       //   failAction: 'error'
       // },
@@ -155,7 +155,7 @@ module.exports = [
     options: {
       id: `simulator_${__dirname.split('/').pop()}_putTransactionRequest`,
       tags: tags,
-      description: 'Callback Transaction Request',
+      description: 'Callback Transaction Request'
       // payload: {
       //   failAction: 'error'
       // },
